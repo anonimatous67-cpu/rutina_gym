@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rutina de Gym Semanal</title>
+
+  <!-- Configuración PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#e8541e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GymRutina">
+
+  <style>
+    /* ===== COLORES ===== */
+    :root {
+      --bg:   #f6f7f9;
+      --card: #ffffff;
+      --tx:   #1b1f27;
+      --mu:   #5d6675;
+      --ac:   #e8541e;
+      --bd:   #e3e6eb;
+      --sv:   #fdeee7;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:   #14171c;
+        --card: #1e232b;
+        --tx:   #eef0f4;
+        --mu:   #9aa3b2;
+        --ac:   #ff7a45;
+        --bd:   #2d343f;
+        --sv:   #2a2420;
+      }
+    }
+
+    /* ===== BASE ===== */
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+               env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: var(--bg);
+      color: var(--tx);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+    }
+    header, .modes, nav, main { max-width: 820px; margin: auto; }
+    header { padding: 28px 16px 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    h1 { margin: 0; font-size: 1.8rem; }
+    header p { margin: 4px 0 0; color: var(--mu); }
+    h2 { font-size: 1.25rem; margin: 18px 0 12px; }
+    main { padding: 0 16px 40px; }
+
+    /* ===== BOTÓN INSTALAR APP ===== */
+    #btnInstalar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--ac);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(232, 84, 30, 0.3);
+      transition: transform 0.2s, opacity 0.2s;
+      flex-shrink: 0;
+    }
+    #btnInstalar:hover {
+      transform: translateY(-2px);
+    }
+
+    /* ===== FONDO CON IMAGEN ===== */
+    :root {
+      --fondo-img: url("https://i.pinimg.com/736x/68/5c/cf/685ccffac1a57a471e8e326e88202cc4.jpg");
+      --fondo-size: cover;
+      --fondo-repeat: no-repeat;
+      --fondo-opacidad: .14;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --fondo-opacidad: .22; }
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100lvh;
+      z-index: -1;
+      background-image: var(--fondo-img);
+      background-size: var(--fondo-size);
+      background-repeat: var(--fondo-repeat);
+      background-position: center;
+      opacity: var(--fondo-opacidad);
+      pointer-events: none;
+    }
+
+    /* ===== BOTONES ===== */
+    .modes { display: flex; gap: 8px; padding: 10px 16px 0; }
+    nav    { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; }
+    .modes button, nav button {
+      flex: 0 0 auto;
+      border: 1px solid var(--bd);
+      background: var(--card);
+      color: var(--tx);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: .9rem;
+      cursor: pointer;
+    }
+    .modes button.on, nav button.on {
+      background: var(--ac);
+      color: #fff;
+      border-color: var(--ac);
+    }
+    nav button.rest-day { opacity: .75; }
+
+    /* ===== NIVELES DE ENTRENAMIENTO ===== */
+    .levels { flex-wrap: wrap; }
+    .nivel-info { max-width: 820px; margin: 0 auto; padding: 10px 16px 0; }
+    .nivel-card {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-left: 4px solid var(--ac);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .nivel-card h3 { margin: 0 0 8px; font-size: 1.05rem; }
+    .nivel-card h3 small { font-weight: 400; font-size: .82rem; color: var(--mu); }
+    .nivel-card p { margin: 4px 0; font-size: .9rem; color: var(--mu); }
+    .nivel-card b { color: var(--tx); }
+
+    /* ===== TARJETA DE EJERCICIO ===== */
+    .ex {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .ex:hover {
+      transform: translateY(-2px);
+      border-color: var(--ac);
+    }
+    .pic svg, .pic img {
+      width: 170px;
+      height: 140px;
+      border-radius: 10px;
+      display: block;
+    }
+    .pic svg { background: var(--sv); color: var(--ac); }
+    .pic img { object-fit: cover; }
+
+    .ex h3 { margin: 0 0 4px; font-size: 1.05rem; }
+    .ex p  { margin: 4px 0; font-size: .92rem; color: var(--mu); }
+    .ex b  { color: var(--tx); }
+    .ex ol { margin: 4px 0 0; padding-left: 18px; font-size: .9rem; color: var(--mu); }
+    .tag {
+      display: inline-block;
+      background: var(--sv);
+      color: var(--ac);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin: 0 6px 6px 0;
+    }
+
+    /* ===== MODAL / ZOOM (IMAGEN COMPLETA SIN RECORTES) ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      backdrop-filter: blur(6px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      animation: zoomIn 0.25s ease-out;
+    }
+    @keyframes zoomIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-close {
+      position: absolute;
+      top: 15px; right: 15px;
+      background: var(--sv);
+      color: var(--ac);
+      border: none;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10;
+    }
+    .modal-card .pic {
+      margin-bottom: 16px;
+      background: var(--sv);
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .modal-card .pic img, .modal-card .pic svg {
+      width: 100% !important;
+      height: auto !important;
+      max-height: 380px !important;
+      object-fit: contain !important;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.03);
+    }
+
+    /* ===== DÍA DE DESCANSO ===== */
+    .rest {
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 18px;
+    }
+    .rest-hero {
+      height: 190px;
+      background: linear-gradient(135deg, #1f2a44, #3b2f63 60%, var(--ac));
+    }
+    .rest-hero svg, .rest-hero img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    .rest-body { padding: 22px 20px 24px; text-align: center; }
+    .rest-body h3 { margin: 0 0 6px; font-size: 1.35rem; }
+    .rest-body > p { margin: 0; color: var(--mu); }
+    .rest-tips {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+      text-align: left;
+    }
+    .tip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--sv);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .tip .ic { font-size: 1.6rem; }
+    .tip b    { display: block; font-size: .92rem; }
+    .tip span { font-size: .8rem; color: var(--mu); }
+
+    /* ===== PC / TABLET ANCHO ===== */
+    @media (min-width: 1000px) {
+      header, .modes, nav, main, .nivel-info { max-width: 1100px; }
+      main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 16px;
+        align-items: start;
+      }
+      main > h2, main > .rest { grid-column: 1 / -1; }
+    }
+
+    /* ===== MÓVIL HORIZONTAL ===== */
+    @media (max-height: 480px) and (orientation: landscape) {
+      header { padding-top: 12px; }
+      h1 { font-size: 1.4rem; }
+      .rest-hero { height: 120px; }
+    }
+
+    /* ===== MÓVIL ===== */
+    @media (max-width: 560px) {
+      .ex { grid-template-columns: 1fr; }
+      .pic svg, .pic img { width: 100%; }
+      .rest-tips { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>🏋️ Rutina de Gym Semanal</h1>
+      <p>6 Días de Alta Frecuencia (Sin Descanso hasta el Domingo)</p>
+    </div>
+    <button id="btnInstalar" aria-label="Instalar Aplicación">
+      📲 Instalar App
+    </button>
+  </header>
+
+  <div class="modes">
+    <button id="btnDia" class="on">Por día</button>
+    <button id="btnSemana">Semana completa</button>
+  </div>
+  <div class="modes levels" id="levels" aria-label="Nivel de entrenamiento"></div>
+  <section class="nivel-info" id="nivelInfo"></section>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+
+  <!-- MODAL ZOOM CON IMAGEN COMPLETA -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div id="modalContainer" class="modal-card">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ===== REGISTRO SERVICE WORKER (PWA) ===== */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((err) => console.warn('SW no registrado:', err));
+      });
+    }
+
+    /* ===== MANEJO DE INSTALACIÓN PWA ===== */
+    let deferredPrompt;
+    const btnInstalar = document.getElementById('btnInstalar');
+
+    // Si ya se abrió como app instalada, ocultamos el botón
+    const yaInstalada = window.matchMedia('(display-mode: standalone)').matches
+                     || window.navigator.standalone === true;
+    if (yaInstalada) btnInstalar.style.display = 'none';
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    function instruccionesInstalar() {
+      const ua = navigator.userAgent;
+      const esIOS = /iphone|ipad|ipod/i.test(ua);
+      const esAndroid = /android/i.test(ua);
+      const esMovil = esIOS || esAndroid;
+      let titulo, pasos;
+
+      if (esIOS) {
+        titulo = 'Instalar en iPhone / iPad';
+        pasos = [
+          'Abre esta página en <b>Safari</b> (no funciona desde Chrome ni desde otras apps).',
+          'Toca el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).',
+          'Baja y elige <b>"Añadir a pantalla de inicio"</b>.',
+          'Toca <b>Añadir</b>. ¡Listo, ya tienes el ícono!'
+        ];
+      } else if (esAndroid) {
+        titulo = 'Instalar en Android';
+        pasos = [
+          'Abre esta página en <b>Chrome</b>.',
+          'Toca el menú <b>⋮</b> (tres puntos arriba a la derecha).',
+          'Elige <b>"Instalar aplicación"</b> o <b>"Añadir a pantalla de inicio"</b>.',
+          'Confirma con <b>Instalar</b>.'
+        ];
+      } else {
+        titulo = 'Instalar en PC';
+        pasos = [
+          'Usa <b>Chrome</b> o <b>Edge</b>.',
+          'Busca el ícono de instalar <b>⊕</b> a la derecha de la barra de direcciones.',
+          'También puedes ir al menú <b>⋮</b> → <b>"Instalar Rutina de Gym Semanal"</b>.',
+          'Confirma con <b>Instalar</b>.'
+        ];
+      }
+
+      const aviso = (location.protocol === 'http:' && location.hostname !== 'localhost')
+        ? '<p style="color:var(--ac);font-weight:600;">⚠️ Esta página está en HTTP. Para poder instalarla debe estar publicada con HTTPS (Netlify, GitHub Pages, etc.).</p>'
+        : (location.protocol === 'file:'
+          ? '<p style="color:var(--ac);font-weight:600;">⚠️ Abriste el archivo directo desde tu dispositivo. Para instalarla debes subirla a un hosting con HTTPS (Netlify, GitHub Pages, etc.).</p>'
+          : '');
+
+      modalBody.innerHTML = `
+        <div style="text-align:left;">
+          <h2 style="margin-top:0;font-size:1.3rem;">📲 ${titulo}</h2>
+          ${aviso}
+          <ol style="padding-left:20px;font-size:.95rem;color:var(--mu);">
+            ${pasos.map(p => `<li style="margin-bottom:8px;">${p}</li>`).join('')}
+          </ol>
+        </div>`;
+      modalOverlay.classList.add('active');
+    }
+
+    btnInstalar.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') btnInstalar.style.display = 'none';
+        deferredPrompt = null;
+      } else {
+        instruccionesInstalar();
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      btnInstalar.style.display = 'none';
+      deferredPrompt = null;
+    });
+
+    const DIBUJOS = {
+      bench: '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><rect x="30" y="78" width="90" height="12" rx="4" fill="currentColor" opacity=".25"/><path d="M45 90v26M105 90v26M20 40h110"/><circle cx="20" cy="40" r="9"/><circle cx="130" cy="40" r="9"/><path d="M75 40v38"/></g></svg>',
+      seat:  '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><rect x="20" y="20" width="14" height="90" rx="4" fill="currentColor" opacity=".25"/><rect x="40" y="76" width="50" height="12" rx="4"/><path d="M60 88v24M110 30v82M110 50h-30M110 70h-30"/><circle cx="80" cy="50" r="5"/><circle cx="80" cy="70" r="5"/></g></svg>',
+      cable: '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M110 10v110M40 10h70"/><rect x="118" y="30" width="16" height="50" rx="3" fill="currentColor" opacity=".25"/><path d="M50 10v62M30 72h40"/><rect x="30" y="92" width="60" height="10" rx="4"/><path d="M45 102v14M75 102v14"/></g></svg>',
+      db:    '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M40 55h30M80 55h30"/><rect x="26" y="40" width="14" height="30" rx="3" fill="currentColor" opacity=".3"/><rect x="70" y="40" width="14" height="30" rx="3" fill="currentColor" opacity=".3"/><rect x="40" y="90" width="14" height="30" rx="3"/><path d="M47 105h40"/><rect x="87" y="90" width="14" height="30" rx="3"/></g></svg>',
+      bar:   '<svg viewBox="0 0 150 130"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M15 65h120"/><rect x="22" y="40" width="12" height="50" rx="3" fill="currentColor" opacity=".3"/><rect x="116" y="40" width="12" height="50" rx="3" fill="currentColor" opacity=".3"/><rect x="38" y="46" width="8" height="38" rx="3"/><rect x="104" y="46" width="8" height="38" rx="3"/></g></svg>'
+    };
+
+    const RUTINA = [
+      /* ---------- LUNES: SUPERIOR A ---------- */
+      {
+        dia: 'Lunes', titulo: 'Superior A (Pecho, Hombros, Tríceps)',
+        ejercicios: [
+          {
+            nombre: 'Press banca con barra',
+            img: 'https://i.pinimg.com/originals/5d/52/bc/5d52bcd60a280ee85725fcfa2924b803.gif',
+            dibujo: 'bench',
+            musculo: 'Pecho, tríceps',
+            sirve: 'Construye fuerza y masa base en el pecho.',
+            series: '4 × 8-10',
+            pasos: ['Acuéstate con los ojos bajo la barra.', 'Agarre firme un poco más ancho que los hombros.', 'Baja controlado rozando el pecho y empuja con fuerza.']
+          },
+          {
+            nombre: 'Press inclinado con mancuernas',
+            img: 'https://i.pinimg.com/originals/76/34/7f/76347f216977f703a7c67d2a5ed04c72.gif',
+            dibujo: 'db',
+            musculo: 'Pecho superior',
+            sirve: 'Da altura y plenitud a la parte alta del pectoral.',
+            series: '3 × 10',
+            pasos: ['Banco inclinado a 30°.', 'Empuja hacia arriba sin juntar bruscamente las mancuernas.', 'Baja lento sintiendo el estiramiento.']
+          },
+          {
+            nombre: 'Press militar con mancuernas',
+            img: 'https://fitcron.com/wp-content/uploads/2021/04/42371301-Dumbbell-Seated-Close-Grip-Press_Shoulders_720.gif',
+            dibujo: 'db',
+            musculo: 'Hombros',
+            sirve: 'Desarrolla la cabeza frontal y media del deltoides.',
+            series: '3 × 10',
+            pasos: ['Espalda recta apoyada.', 'Sube las mancuernas sobre la cabeza sin bloquear codos.', 'Baja controlado a la altura de las orejas.']
+          },
+          {
+            nombre: 'Press de hombros en máquina con discos',
+            img: 'https://api.smartworkout.app/asset/image/396c5098-22d4-4229-9fa4-054515ea9824',
+            dibujo: 'seat',
+            musculo: 'Hombros, tríceps',
+            sirve: 'Empuje vertical guiado con discos: gran carga con trayectoria estable.',
+            series: '3 × 8-10',
+            pasos: ['Ajusta el asiento para que los agarres queden a la altura de los hombros.', 'Empuja hacia arriba sin arquear la espalda.', 'Baja controlado hasta sentir el estiramiento del hombro.']
+          },
+          {
+            nombre: 'Elevaciones laterales',
+            img: 'https://image.tuasaude.com/media/article/nj/tp/elevacao-lateral_75627.gif?width=686&height=487',
+            dibujo: 'db',
+            musculo: 'Deltoides laterales',
+            sirve: 'Crea el efecto visual de hombros anchos.',
+            series: '4 × 12-15',
+            pasos: ['Peso moderado, codos semiflexionados.', 'Eleva lateralmente hasta la altura de los hombros.', 'Baja despacio resistiendo el peso.']
+          },
+          {
+            nombre: 'Extensión de tríceps en polea',
+            img: 'https://api.smartworkout.app/asset/image/800c74bb-41a6-4401-a349-3ff73122160f',
+            dibujo: 'cable',
+            musculo: 'Tríceps',
+            sirve: 'Aísla el tríceps para ganar volumen en el brazo.',
+            series: '3 × 12',
+            pasos: ['Codos fijos pegados al torso.', 'Extiende hacia abajo abriendo ligeramente al final.', 'Regresa controlado a 90°.']
+          }
+        ]
+      },
+
+      /* ---------- MARTES: INFERIOR A ---------- */
+      {
+        dia: 'Martes', titulo: 'Inferior A (Cuádriceps y Core)',
+        ejercicios: [
+          {
+            nombre: 'Prensa de piernas',
+            img: 'https://fitcron.com/wp-content/uploads/2021/04/07401301-Sled-45%C2%B0-Leg-Wide-Press_Thighs_720.gif',
+            dibujo: 'seat',
+            musculo: 'Cuádriceps, glúteos',
+            sirve: 'Permite mover cargas pesadas con seguridad para las piernas.',
+            series: '4 × 10-12',
+            pasos: ['Pies a la altura de los hombros en la plataforma.', 'Baja controlando el peso hasta los 90°.', 'Empuja con toda la planta sin bloquear rodillas.']
+          },
+          {
+            nombre: 'Sentadilla hack en máquina',
+            img: 'https://api.smartworkout.app/asset/image/d6efe1f4-02e3-45bb-86f3-6c87e862509f',
+            dibujo: 'seat',
+            musculo: 'Cuádriceps',
+            sirve: 'Aísla el cuádriceps de forma brutal.',
+            series: '3 × 10',
+            pasos: ['Espalda totalmente apoyada.', 'Baja de forma profunda y fluida.', 'Sube explosivo contrayendo las piernas.']
+          },
+          {
+            nombre: 'Extensión de cuádriceps',
+            img: 'https://boxlifemagazine.com/wp-content/uploads//2023/07/leg-extension-exercice-musculation-min.gif',
+            dibujo: 'seat',
+            musculo: 'Cuádriceps',
+            sirve: 'Congestión extrema y definición del músculo frontal.',
+            series: '3 × 12-15',
+            pasos: ['Ajusta el rodillo en los tobillos.', 'Extiende las piernas por completo y aguanta 1 segundo arriba.', 'Baja frenando el peso.']
+          },
+          {
+            nombre: 'Elevación de talones',
+            img: 'https://api.smartworkout.app/asset/image/26d66319-8ed6-4963-b73b-4175a8db6ea5',
+            dibujo: 'seat',
+            musculo: 'Pantorrillas',
+            sirve: 'Hipertrofia de pantorrilla.',
+            series: '4 × 15',
+            pasos: ['Puntas de los pies en el borde.', 'Sube al máximo estirando los gemelos.', 'Baja profundo para buscar rango completo.']
+          },
+          {
+            nombre: 'Elevación de talones de pie en máquina',
+            img: 'https://api.smartworkout.app/asset/image/abd933b2-d99f-4d60-bc5a-4c7b68ab7586',
+            dibujo: 'seat',
+            musculo: 'Pantorrillas (gemelos)',
+            sirve: 'Con las rodillas estiradas trabaja el gemelo con carga alta.',
+            series: '4 × 12-15',
+            pasos: ['Coloca las almohadillas sobre los hombros y las puntas de los pies en la plataforma.', 'Sube al máximo sobre las puntas.', 'Baja profundo estirando el talón y repite sin rebotar.']
+          },
+          { 
+  nombre: 'Sentadilla búlgara con mancuernas (enfoque cuádriceps)', 
+  img: 'https://api.smartworkout.app/asset/image/11e976c5-d0b9-49e0-91e3-453082bd3649', 
+  dibujo: 'seat', 
+  musculo: 'Cuádriceps, glúteos, femorales, core', 
+  sirve: 'Desarrolla fuerza e hipertrofia unilateral enfocándose en los cuádriceps.', 
+  series: '3 × 8-12 por pierna', 
+  pasos: [
+    'Coloca el empeine del pie trasero sobre un banco detrás de ti y da un paso corto hacia adelante con el pie de apoyo, sosteniendo una mancuerna en cada mano.',
+    'Baja de forma vertical manteniendo el torso erguido y dejando que la rodilla delantera avance ligeramente sobre la punta del pie.',
+    'Empuja con toda la planta del pie delantero para subir de manera controlada sin bloquear la rodilla.'
+  ] 
+},
+
+        ]
+      },
+
+      /* ---------- MIÉRCOLES: SUPERIOR B ---------- */
+      {
+        dia: 'Miércoles', titulo: 'Superior B (Espalda y Bíceps)',
+        ejercicios: [
+          {
+            nombre: 'Jalón al pecho',
+            img: 'https://vitruve.fit/wp-content/uploads/2021/11/vitruvs3.gif',
+            dibujo: 'cable',
+            musculo: 'Dorsales',
+            sirve: 'Da amplitud y forma de V a la espalda.',
+            series: '4 × 10',
+            pasos: ['Agarre abierto, pecho erguido hacia la barra.', 'Jala tirando con los codos hacia abajo y atrás.', 'Sube lento sin perder postura.']
+          },
+          {
+            nombre: 'Remo sentado en polea',
+            img: 'https://api.smartworkout.app/asset/image/dec428b4-8d5d-4c86-9225-9992cb5caa48',
+            dibujo: 'cable',
+            musculo: 'Espalda media',
+            sirve: 'Aporta grosor y densidad al centro de la espalda.',
+            series: '3 × 10-12',
+            pasos: ['Espalda recta y ligera inclinación atrás.', 'Lleva el agarre al abdomen apretando los omoplatos.', 'Estira los brazos con control.']
+          },
+          {
+            nombre: 'Pájaros en máquina (posterior)',
+            img: 'https://www.thingys.com.ar/gymapps/tutorial/peck_hom.gif',
+            dibujo: 'seat',
+            musculo: 'Hombro posterior',
+            sirve: 'Equilibra la postura y redondea el hombro.',
+            series: '3 × 12',
+            pasos: ['Pecho apoyado al frente.', 'Abre los brazos hacia atrás contrayendo la parte posterior.', 'Regresa despacio.']
+          },
+          {
+            nombre: 'Curl de bíceps con barra',
+            img: 'https://fitcron.com/wp-content/uploads/2021/04/00311301-Barbell-Curl_Upper-Arms_720.gif',
+            dibujo: 'bar',
+            musculo: 'Bíceps',
+            sirve: 'Constructor clásico de masa en el bíceps.',
+            series: '3 × 10',
+            pasos: ['De pie, codos fijos a los costados.', 'Sube la barra contrayendo con fuerza.', 'Baja controlado sin inercia.']
+          },
+            { 
+  nombre: 'Jalón al pecho en polea alta (agarre prono ancho)', 
+  img: 'https://fitcron.com/wp-content/uploads/2021/04/01981301-Cable-Pulldown_Back_720.gif', 
+  dibujo: 'seat', 
+  musculo: 'Dorsales, redondos, trapecio medio/inferior, bíceps', 
+  sirve: 'Desarrolla la amplitud de la espalda y fortalece la tracción vertical.', 
+  series: '3-4 × 10-12', 
+  pasos: [
+    'Siéntate con los muslos firmes bajo los rodillos y sujeta la barra con las manos más anchas que tus hombros (palmas al frente).', 
+    'Saca el pecho, inclina ligeramente el torso hacia atrás y tira de la barra hacia la parte superior del pecho juntando los omóplatos.', 
+    'Regresa la barra de forma controlada hasta estirar completamente los brazos arriba sin perder la tensión.'
+  ] 
+},
+{ 
+  nombre: 'Pullover en polea alta con cuerda o barra recta', 
+  img: 'https://fitcron.com/wp-content/uploads/2021/04/12291301-Cable-Standing-Lat-Pushdown-rope-equipment_Back_720.gif', 
+  dibujo: 'seat', 
+  musculo: 'Dorsal ancho, redondo mayor, tríceps (cabeza larga), serrato anterior', 
+  sirve: 'Aísla y estira el dorsal ancho sin involucrar los bíceps.', 
+  series: '3 × 12-15', 
+  pasos: [
+    'De pie frente a la polea alta, sujeta la barra o cuerda con los brazos casi estirados e inclina ligeramente el torso hacia adelante.',
+    'Baja el agarre en un arco amplio hasta tocar tus muslos manteniendo los codos fijos y el pecho alto.',
+    'Sube de forma controlada sintiendo el estiramiento completo en los dorsales sin perder la tensión.'
+  ] 
+},
+        ]
+      },
+
+      /* ---------- JUEVES: INFERIOR B ---------- */
+      {
+        dia: 'Jueves', titulo: 'Inferior B (Femorales y Glúteos)',
+        ejercicios: [
+          {
+            nombre: 'Hip thrust con barra',
+            img: 'https://fitcron.com/wp-content/uploads/2021/04/29641301-Barbell-Glute-Bridge-hands-on-bar_Hips_720.gif',
+            dibujo: 'bench',
+            musculo: 'Glúteos y cadera',
+            sirve: 'Máximo estímulo para potencia y desarrollo de glúteos.',
+            series: '4 × 10',
+            pasos: ['Espalda alta apoyada en el banco.', 'Empuja la cadera hacia arriba contrayendo fuerte arriba.', 'Baja controlado sin apoyar del todo el peso.']
+          },
+          {
+            nombre: 'Curl femoral en máquina',
+            img: 'https://fitcron.com/wp-content/uploads/2021/04/05861301-Lever-Lying-Leg-Curl_Thighs_720.gif',
+            dibujo: 'seat',
+            musculo: 'Femorales',
+            sirve: 'Fortalece la parte posterior del muslo.',
+            series: '3 × 12',
+            pasos: ['Tumbado boca abajo, rodillo sobre los talones.', 'Flexiona llevando los talones hacia los glúteos.', 'Regresa lento.']
+          },
+          {
+            nombre: 'Curl femoral sentado',
+            img: 'https://i.pinimg.com/originals/f2/a3/51/f2a3514efd81bfdf908462168b0f8b8f.gif',
+            dibujo: 'seat',
+            musculo: 'Femorales',
+            sirve: 'Aísla los femorales con la cadera flexionada.',
+            series: '3 × 12',
+            pasos: ['Rodillo sobre los tobillos, muslos fijos.', 'Flexiona las rodillas llevando los talones abajo.', 'Sube despacio.']
+          },
+          {
+            nombre: 'Patada de glúteo en máquina (Glute Extension)',
+            img: 'https://api.smartworkout.app/asset/image/51899e95-660f-44d9-b2ac-754dae5efef1',
+            dibujo: 'seat',
+            musculo: 'Glúteos',
+            sirve: 'Aísla el glúteo con tensión constante en toda la patada.',
+            series: '3 × 12 por pierna',
+            pasos: ['Elige el peso y apoya el pecho; sujeta las manijas con ambas manos.', 'Coloca un pie en el brazo móvil y empuja hacia atrás con el glúteo, sin mover la cadera.', 'Aguanta 1 segundo arriba, vuelve lento y cambia de pierna.']
+          },
+          {
+            nombre: 'Hiperextensión de espalda baja',
+            img: 'https://api.smartworkout.app/asset/image/e0f3a12e-6bb8-48bf-b508-862260fb90ef',
+            dibujo: 'seat',
+            musculo: 'Lumbar, glúteos, femorales',
+            sirve: 'Fortalece la zona lumbar y la cadena posterior.',
+            series: '3 × 12-15',
+            pasos: ['Ajusta la almohadilla a la altura de la cadera y bloquea los talones bajo los rodillos.', 'Baja el torso con la espalda recta.', 'Sube hasta alinear el cuerpo, sin pasarte de la línea recta.']
+          },
+          { 
+  nombre: 'Zancadas reversas (desplantes hacia atrás) con mancuernas', 
+  img: 'https://api.smartworkout.app/asset/image/46b725f7-6ec2-4378-ac8c-a15e575bde3b', 
+  dibujo: 'seat', 
+  musculo: 'Cuádriceps, glúteos, femorales, aductores', 
+  sirve: 'Fortalece las piernas y glúteos con menor impacto en las rodillas.', 
+  series: '3 × 10-12 por pierna', 
+  pasos: [
+    'De pie con una mancuerna en cada mano a los lados del cuerpo, mantén la espalda recta y el abdomen firme.',
+    'Da un paso largo hacia atrás y baja la cadera hasta que ambas rodillas formen un ángulo de 90 grados, sin que la trasera golpee el suelo.',
+    'Empuja con el talón de la pierna delantera para volver a la posición inicial.'
+  ] 
+},
+        ]
+      },
+
+
+      /* ---------- VIERNES: EMPUJE Y CORE ---------- */
+      {
+        dia: 'Viernes', titulo: 'Empuje y Core (Pecho, Hombro, Abdomen)',
+        ejercicios: [
+          {
+            nombre: 'Press de pecho en máquina',
+            img: 'https://api.smartworkout.app/asset/image/10a77040-fe68-475f-99c9-f02da0fe8d29',
+            dibujo: 'seat',
+            musculo: 'Pecho, tríceps',
+            sirve: 'Versión guiada del press para bombear el pectoral de forma segura.',
+            series: '4 × 10-12',
+            pasos: ['Ajusta el asiento a la altura del pecho.', 'Empuja al frente sin bloquear codos.', 'Regresa lento sintiendo el estiramiento.']
+          },
+          {
+            nombre: 'Cruce de poleas',
+            img: 'https://api.smartworkout.app/asset/image/ec769207-2edf-4308-a50b-8294cea96b26',
+            dibujo: 'cable',
+            musculo: 'Pecho',
+            sirve: 'Tensión constante para marcar el centro del pecho.',
+            series: '3 × 12-15',
+            pasos: ['Un paso al frente, codos flexionados.', 'Junta las manos al frente.', 'Abre lento sintiendo el estiramiento.']
+          },
+          {
+            nombre: 'Contractora de pecho (Pec Deck)',
+            img: 'https://api.smartworkout.app/asset/image/200b8ca4-2f89-47fc-89ce-98ed852b937a',
+            dibujo: 'seat',
+            musculo: 'Pecho',
+            sirve: 'Aísla el pectoral juntando los brazos al frente.',
+            series: '3 × 12-15',
+            pasos: ['Ajusta el asiento y apoya la espalda; agarra las manijas con firmeza.', 'Junta las manos al frente apretando el pecho.', 'Regresa despacio sin dejar caer la pila de peso.']
+          },
+          {
+            nombre: 'Press de hombros en máquina',
+            img: 'https://api.smartworkout.app/asset/image/396c5098-22d4-4229-9fa4-054515ea9824',
+            dibujo: 'seat',
+            musculo: 'Hombros',
+            sirve: 'Trabaja el deltoides con estabilidad total.',
+            series: '3 × 10-12',
+            pasos: ['Asiento a la altura de los hombros.', 'Empuja hacia arriba sin arquear la espalda.', 'Baja controlado.']
+          },
+          {
+            nombre: 'Crunch abdominal en cable de rodillas',
+            img: 'https://api.smartworkout.app/asset/image/4cd753b6-b5bb-4d63-a0a0-ca5161bfe892',
+            dibujo: 'cable',
+            musculo: 'Abdomen',
+            sirve: 'Fortalece el core con resistencia progresiva.',
+            series: '3 × 15',
+            pasos: ['Arrodillado frente a la polea alta.', 'Enrolla el torso hacia las rodillas apretando el abdomen.', 'Sube con control.']
+          }
+        ]
+      },
+
+      /* ---------- SÁBADO: BRAZOS, ABDOMEN Y BICICLETA ---------- */
+      {
+        dia: 'Sábado', titulo: 'Brazos, Abdomen y Calentamiento de Bicicleta',
+        ejercicios: [
+          {
+            nombre: 'Calentamiento en Bicicleta Estática',
+            img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6FAqgpwQ691qq5OMxyYB4ebAvkDyRcCAGexOYIXmx5Q&s=10',
+            dibujo: 'seat',
+            musculo: 'Cardio y Activación',
+            sirve: 'Eleva la temperatura corporal, lubrica articulaciones y prepara el sistema cardiovascular antes de los brazos.',
+            series: '1 × 10-15 min',
+            pasos: ['Pedalea a ritmo moderado-suave.', 'Mantén una respiración constante para activar las piernas y elevar pulsaciones.', 'Haz estiramientos dinámicos al terminar.']
+          },
+          {
+            nombre: 'Curl predicador en máquina',
+            img: 'https://api.smartworkout.app/asset/image/fe056dae-f58f-4653-be66-d68d628f1bf5',
+            dibujo: 'seat',
+            musculo: 'Bíceps',
+            sirve: 'Aísla el bíceps para buscar un bombeo total sin inercia.',
+            series: '3 × 10-12',
+            pasos: ['Apoya las axilas en el borde.', 'Sube las manijas contrayendo con fuerza.', 'Baja controlado sin soltar la tensión.']
+          },
+          {
+            nombre: 'Curl martillo con mancuernas',
+            img: 'https://api.smartworkout.app/asset/image/3b047fe7-a0a3-4080-aeec-acb472b7a6a1',
+            dibujo: 'db',
+            musculo: 'Bíceps y antebrazo',
+            sirve: 'Da grosor al brazo y mejora el agarre.',
+            series: '3 × 12',
+            pasos: ['Palmas enfrentadas durante todo el movimiento.', 'Sube sin mover los codos.', 'Baja con control.']
+          },
+          {
+            nombre: 'Curl predicador con barra Z',
+            img: 'https://fitcron.com/wp-content/uploads/2021/04/16271301-EZ-Barbell-Close-Grip-Preacher-Curl_Upper-Arms-FIX_720.gif',
+            dibujo: 'bar',
+            musculo: 'Bíceps',
+            sirve: 'El apoyo evita el balanceo y aísla la cabeza corta del bíceps.',
+            series: '3 × 10-12',
+            pasos: ['Ajusta el asiento y apoya los brazos completos en la almohadilla.', 'Sube la barra contrayendo el bíceps.', 'Baja controlado sin estirar del todo el codo bruscamente.']
+          },
+          {
+            nombre: 'Fondo de tríceps en banco sentado',
+            img: 'https://api.smartworkout.app/asset/image/14fff202-7bb2-4e35-af03-39b9a58417d2',
+            dibujo: 'seat',
+            musculo: 'Tríceps',
+            sirve: 'Construye volumen  en los tríceps.',
+            series: '3 × 10-12',
+            pasos: ['Torso erguido, agarra las manijas.', 'Empuja hacia abajo extendiendo los brazos.', 'Sube lento sin encoger hombros.']
+          },
+        
+          {
+            nombre: 'Abdominales en banco declinado',
+            img: 'https://fitcron.com/wp-content/uploads/2024/05/18641301-Extra-Decline-Sit-up_Waist_720.gif',
+            dibujo: 'bench',
+            musculo: 'Abdomen',
+            sirve: 'Mayor rango de movimiento que el crunch en suelo.',
+            series: '3 × 15',
+            pasos: ['Acuéstate con los pies asegurados bajo los rodillos.', 'Sube el torso enrollando la columna, sin jalar el cuello.', 'Baja lento sin soltar la tensión del abdomen.']
+          },
+          
+        ]
+      },
+
+      /* ---------- DOMINGO: DESCANSO ---------- */
+      { dia: 'Domingo', titulo: 'Descanso', descanso: true }
+    ];
+
+    const nav  = document.getElementById('nav');
+    const main = document.getElementById('main');
+    let modo = 'dia';
+    let diaActual = 0;
+
+    const NIVELES = {
+      principiante: {
+        icono: '🟢', nombre: 'Principiante', para: 'Menos de 6 meses entrenando',
+        series: 'una serie menos por ejercicio (mínimo 2)',
+        descanso: '60-90 s',
+        intensidad: 'Peso ligero: deja 3-4 repeticiones en reserva.',
+        consejo: 'Aprende la técnica antes de subir peso.',
+        delta: -1
+      },
+      intermedio: {
+        icono: '🟡', nombre: 'Intermedio', para: '6 meses a 2 años entrenando',
+        series: 'las indicadas en cada ejercicio',
+        descanso: '60-90 s',
+        intensidad: 'Peso moderado: deja 1-2 repeticiones en reserva.',
+        consejo: 'Sobrecarga progresiva constante.',
+        delta: 0
+      },
+      avanzado: {
+        icono: '🔴', nombre: 'Avanzado', para: 'Más de 2 años entrenando',
+        series: 'una serie más por ejercicio (máximo 5)',
+        descanso: '90-120 s',
+        intensidad: 'Peso pesado: llega a 0-1 repeticiones en reserva.',
+        consejo: 'Exige más recuperación y nutrición.',
+        delta: 1
+      }
+    };
+
+    const REPS = {
+      principiante: { '8-10': '10-12', '10': '12', '10-12': '12-15', '12': '12', '12-15': '15', '15': '15' },
+      avanzado:     { '8-10': '6-8',   '10': '8',  '10-12': '8-10',  '12': '10', '12-15': '10-12', '15': '12-15' }
+    };
+
+    let nivel = 'intermedio';
+    try {
+      const guardado = localStorage.getItem('nivelGym');
+      if (NIVELES[guardado]) nivel = guardado;
+    } catch (e) {}
+
+    function seriesNivel(texto) {
+      const m = texto.match(/^(\d+) × ([\d-]+)(.*)$/);
+      if (!m || nivel === 'intermedio' || texto.includes('min')) return texto;
+      const series = Math.min(5, Math.max(2, +m[1] + NIVELES[nivel].delta));
+      const reps = REPS[nivel][m[2]] || m[2];
+      return `${series} × ${reps}${m[3]}`;
+    }
+
+    function renderNivel() {
+      const n = NIVELES[nivel];
+      [...document.getElementById('levels').children]
+        .forEach(b => b.classList.toggle('on', b.dataset.nivel === nivel));
+      document.getElementById('nivelInfo').innerHTML = `
+        <div class="nivel-card">
+          <h3>${n.icono} ${n.nombre} <small>· ${n.para}</small></h3>
+          <span class="tag">Series: ${n.series}</span>
+          <span class="tag">Descanso entre series: ${n.descanso}</span>
+          <p><b>Intensidad:</b> ${n.intensidad}</p>
+          <p><b>Consejo:</b> ${n.consejo}</p>
+        </div>`;
+    }
+
+    function htmlImagen(ej) {
+      const dibujo = DIBUJOS[ej.dibujo] || '';
+      if (!ej.img) return dibujo;
+      const respaldo = dibujo.replace(/"/g, '&quot;');
+      return `<img src="${ej.img}" alt="${ej.nombre}" loading="lazy" onerror="this.outerHTML='${respaldo}'">`;
+    }
+
+    function htmlEjercicio(ej) {
+      return `
+        <div class="ex" onclick='abrirZoom(${JSON.stringify(ej).replace(/'/g, "&#39;")})'>
+          <div class="pic">${htmlImagen(ej)}</div>
+          <div>
+            <h3>${ej.nombre}</h3>
+            <span class="tag">${ej.musculo}</span>
+            <span class="tag">${seriesNivel(ej.series)}</span>
+            <p><b>¿Para qué sirve?</b> ${ej.sirve}</p>
+            <p><b>Cómo se usa:</b></p>
+            <ol>${ej.pasos.map(p => `<li>${p}</li>`).join('')}</ol>
+          </div>
+        </div>`;
+    }
+
+    /* MODAL ZOOM CON AJUSTE DE IMAGEN COMPLETA */
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('modalBody');
+    const modalClose = document.getElementById('modalClose');
+
+    function abrirZoom(ej) {
+      modalBody.innerHTML = `
+        <div style="text-align: left;">
+          <div class="pic" style="margin-bottom: 16px;">${htmlImagen(ej)}</div>
+          <h2 style="margin-top: 0; font-size: 1.3rem;">${ej.nombre}</h2>
+          <div>
+            <span class="tag">${ej.musculo}</span>
+            <span class="tag">${seriesNivel(ej.series)}</span>
+          </div>
+          <p style="margin-top: 12px;"><b>¿Para qué sirve?</b> ${ej.sirve}</p>
+          <p style="margin-top: 8px;"><b>Cómo se usa:</b></p>
+          <ol style="padding-left: 20px; font-size: 0.95rem; color: var(--mu);">${ej.pasos.map(p => `<li style="margin-bottom: 6px;">${p}</li>`).join('')}</ol>
+        </div>
+      `;
+      modalOverlay.classList.add('active');
+    }
+
+    function cerrarZoom() {
+      modalOverlay.classList.remove('active');
+    }
+
+    modalClose.onclick = cerrarZoom;
+    modalOverlay.onclick = (e) => {
+      if (e.target === modalOverlay) cerrarZoom();
+    };
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') cerrarZoom();
+    });
+
+    const IMG_DESCANSO = '';
+    const DIBUJO_DESCANSO =
+      '<svg viewBox="0 0 400 190" preserveAspectRatio="xMidYMid slice">' +
+      '<g fill="#fff">' +
+      '<circle cx="60" cy="40" r="2.5" opacity=".8"/><circle cx="130" cy="95" r="2" opacity=".6"/>' +
+      '<circle cx="320" cy="35" r="2.5" opacity=".8"/><circle cx="360" cy="110" r="2" opacity=".6"/>' +
+      '<circle cx="250" cy="60" r="1.8" opacity=".7"/><circle cx="90" cy="150" r="1.8" opacity=".5"/></g>' +
+      '<path d="M215 40a55 55 0 1 0 55 75A62 62 0 0 1 215 40z" fill="#ffe7a8"/>' +
+      '<text x="285" y="70" font-size="26" fill="#fff" opacity=".9" font-weight="700">z</text>' +
+      '<text x="308" y="52" font-size="20" fill="#fff" opacity=".7" font-weight="700">z</text>' +
+      '<text x="326" y="38" font-size="15" fill="#fff" opacity=".5" font-weight="700">z</text>' +
+      '</svg>';
+
+    function htmlImagenDescanso() {
+      if (!IMG_DESCANSO) return DIBUJO_DESCANSO;
+      const respaldo = DIBUJO_DESCANSO.replace(/"/g, '&quot;');
+      return `<img src="${IMG_DESCANSO}" alt="Día de descanso" loading="lazy" onerror="this.outerHTML='${respaldo}'">`;
+    }
+
+    function htmlDescanso() {
+      return `
+        <div class="rest">
+          <div class="rest-hero">${htmlImagenDescanso()}</div>
+          <div class="rest-body">
+            <h3>Día de descanso</h3>
+            <p>Tus músculos crecen mientras descansas. Recupérate para rendir mejor.</p>
+            <div class="rest-tips">
+              <div class="tip"><span class="ic">😴</span><div><b>Duerme</b><span>7-9 horas</span></div></div>
+              <div class="tip"><span class="ic">💧</span><div><b>Hidrátate</b><span>Agua durante todo el día</span></div></div>
+              <div class="tip"><span class="ic">🥗</span><div><b>Come bien</b><span>Proteína y verduras</span></div></div>
+              <div class="tip"><span class="ic">🚶</span><div><b>Camina</b><span>25-30 min suaves</span></div></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function htmlDia(d) {
+      const cuerpo = d.descanso ? htmlDescanso() : d.ejercicios.map(htmlEjercicio).join('');
+      return `<h2>${d.dia} · ${d.titulo}</h2>${cuerpo}`;
+    }
+
+    function dibujar() {
+      renderNivel();
+      document.getElementById('btnDia').classList.toggle('on', modo === 'dia');
+      document.getElementById('btnSemana').classList.toggle('on', modo === 'semana');
+      nav.style.display = modo === 'dia' ? 'flex' : 'none';
+      [...nav.children].forEach((b, i) => b.classList.toggle('on', i === diaActual));
+      main.innerHTML = modo === 'dia' ? htmlDia(RUTINA[diaActual]) : RUTINA.map(htmlDia).join('');
+    }
+
+    RUTINA.forEach((d, i) => {
+      const b = document.createElement('button');
+      b.textContent = d.dia;
+      if (d.descanso) b.className = 'rest-day';
+      b.onclick = () => { diaActual = i; dibujar(); };
+      nav.appendChild(b);
+    });
+
+    document.getElementById('btnDia').onclick    = () => { modo = 'dia';    dibujar(); };
+    document.getElementById('btnSemana').onclick = () => { modo = 'semana'; dibujar(); };
+
+    Object.keys(NIVELES).forEach(k => {
+      const b = document.createElement('button');
+      b.dataset.nivel = k;
+      b.textContent = NIVELES[k].icono + ' ' + NIVELES[k].nombre;
+      b.onclick = () => {
+        nivel = k;
+        try { localStorage.setItem('nivelGym', k); } catch (e) {}
+        dibujar();
+      };
+      document.getElementById('levels').appendChild(b);
+    });
+
+    dibujar();
+  </script>
+</body>
+</html>
